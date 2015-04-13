@@ -34,7 +34,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             toReturn += "&d=" + (end.Month - 1) + "&e=" + end.Day + "&f=" + end.Year;
 
             //Build the resolution section
-            toReturn += "&g=" + resolution + "&ignore=.csv";
+            toReturn += "&g=" + (char)resolution + "&ignore=.csv";
 
             return toReturn;
         }
