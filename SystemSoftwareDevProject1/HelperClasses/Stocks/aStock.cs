@@ -46,54 +46,59 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
         /// <param name="end"></param>
         /// <param name="res"></param>
         /// <param name="mode"></param>
-        public aStock(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
+        public static async Task<Tuple<aStock,bool>> aStockAsync(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
         {
-            aPeriodType = res;
-            companyName = name;
-            StartingDate = start;
-            EndingDate = end;
+            List<aCandleStick> _candlestick = new List<aCandleStick>();
 
             if(mode == StocksCSVHandler.RetrievalMode.File)
             {
-                ReadFromFile(mode);
+                _candlestick = await ReadFromFile(name,start,end,res,mode);
             }
 
             else
             {
-                ReadFromURL(mode);
+                _candlestick = await ReadFromURL(name, start, end, res, mode);
             }
+
+            return new Tuple<aStock,bool>(new aStock(_candlestick, name, start, end, res), true);
         }
 
         /// <summary>
         /// Create your stock data from file.
         /// </summary>
         /// <param name="mode"></param>
-        public async void ReadFromFile(StocksCSVHandler.RetrievalMode mode)
+        public static async Task<List<aCandleStick>> ReadFromFile(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
         {
+            List<aCandleStick> _Candlestick = null;
             try
             {
-                Candlestick = await StocksCSVHandler.getStockData(companyName, aPeriodType, StartingDate, EndingDate, mode);
+                _Candlestick = await StocksCSVHandler.getStockData(name, res, start, end, mode);
             }
             catch
             {
                 MessageBox.Show("Something went wrong! No, you don't get to know what it is");
             }
+
+            return _Candlestick;
         }
 
         /// <summary>
         /// Create your stock data from URL.
         /// </summary>
         /// <param name="mode"></param>
-        public async void ReadFromURL(StocksCSVHandler.RetrievalMode mode)
+        public static async Task<List<aCandleStick>> ReadFromURL(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
         {
+            List<aCandleStick> _Candlestick = null;
             try
             {
-                Candlestick = await StocksCSVHandler.getStockData(companyName, aPeriodType, StartingDate, EndingDate, mode);
+                _Candlestick = await StocksCSVHandler.getStockData(name, res, start, end, mode);
             }
             catch
             {
                 MessageBox.Show("Something went wrong! No, you don't get to know what it is");
             }
+
+            return _Candlestick;
         }
 
         public string getDateRange()

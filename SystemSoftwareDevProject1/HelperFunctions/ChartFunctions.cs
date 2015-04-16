@@ -12,9 +12,17 @@ namespace SystemSoftwareDevProject1.HelperFunctions
 
         public static int determineMaximum(List<aCandleStick> stocks)
         {
-            decimal maximum = stocks.Max(x => x.High);
+            try
+            {
+                decimal maximum = stocks.Max(x => x.High);
 
-            return (int)(maximum + 1);
+                return (int)(maximum + 1);
+            }
+
+            catch
+            {
+                return 0;
+            }
         }
 
         public static int determineMinimum(List<aCandleStick> stocks)

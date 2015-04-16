@@ -22,8 +22,7 @@ namespace SystemSoftwareDevProject1
         {
             _stocks = stocks;
             InitializeComponent();
-
-            this.Text = stocks.companyName + ", " + stocks.aPeriodType + ", " + stocks.getDateRange(); 
+            this.Text = stocks.companyName + ", " + stocks.aPeriodType + ", " + stocks.getDateRange();
         }
 
         private void populateChartContent(aStock.PeriodType resolution, string stockName, StocksCSVHandler.RetrievalMode mode)
@@ -73,12 +72,27 @@ namespace SystemSoftwareDevProject1
             chart1.Series.Clear();
             if (await StocksCSVHandler.checkFileForDates(_stocks.companyName, _stocks.aPeriodType, _stocks.StartingDate, _stocks.EndingDate))
             {
-                populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.File);
+                try
+                {
+                    populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.File);
+                }
+                
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
 
             else
             {
-                populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.URL);
+                try
+                {
+                    populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.URL);
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
         }
     }

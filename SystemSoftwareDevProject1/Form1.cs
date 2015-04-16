@@ -28,7 +28,11 @@ namespace SystemSoftwareDevProject1
             cbStocks.SelectedIndex = 0;
         }
 
-
+        /// <summary>
+        /// Load method
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void Form1_Load(object sender, EventArgs e)
         {
             this.Enabled = false;
@@ -58,12 +62,6 @@ namespace SystemSoftwareDevProject1
             }
 
             tsslMain.Text = "Default information downloaded and verified.";
-        }
-
-        //USE FOR EXAMPLE APPLICATIONS
-        private void button1_Click(object sender, EventArgs e)
-        {
-            
         }
 
         /// <summary>
@@ -99,17 +97,27 @@ namespace SystemSoftwareDevProject1
             
             try
             {
-
                 try
                 {
-                    toSend = new aStock(stock, start, end,resolution, StocksCSVHandler.RetrievalMode.File);
-                    //toSend = await StocksCSVHandler.getStockData(stock, resolution, start, end, StocksCSVHandler.RetrievalMode.File);
+                    tsslMain.Text = "Downloading new stock data...";
+                    this.Enabled = false;
+                    Tuple<aStock, bool> returnVerification = new Tuple<aStock,bool>(null, false);
+                    returnVerification = await aStock.aStockAsync(stock, start, end,resolution, StocksCSVHandler.RetrievalMode.File);
+                    //Spin to win
+                    while (!returnVerification.Item2) ;
+
+                    toSend = returnVerification.Item1;
                 }
 
                 catch (WebException ex)
                 {
                     MessageBox.Show("The stock you selected could not be found on yahoo!");
                     return;
+                }
+                finally
+                {
+                    this.Enabled = true;
+                    tsslMain.Text = "New stock information acquired.";
                 }
             }
 
