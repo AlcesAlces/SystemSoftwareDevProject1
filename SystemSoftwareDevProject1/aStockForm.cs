@@ -70,29 +70,36 @@ namespace SystemSoftwareDevProject1
         {
             //Display
             chart1.Series.Clear();
-            if (await StocksCSVHandler.checkFileForDates(_stocks.companyName, _stocks.aPeriodType, _stocks.StartingDate, _stocks.EndingDate))
+            try
             {
-                try
+                if (await StocksCSVHandler.checkFileForDates(_stocks.companyName, _stocks.aPeriodType, _stocks.StartingDate, _stocks.EndingDate))
                 {
-                    populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.File);
+                    try
+                    {
+                        populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.File);
+                    }
+
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
                 }
-                
-                catch(Exception ex)
+
+                else
                 {
-                    MessageBox.Show(ex.Message);
+                    try
+                    {
+                        populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.URL);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
                 }
             }
-
-            else
+            catch (Exception ex)
             {
-                try
-                {
-                    populateChartContent(_stocks.aPeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.URL);
-                }
-                catch(Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
+                MessageBox.Show(ex.Message);
             }
         }
     }

@@ -76,7 +76,7 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
             }
             catch
             {
-                MessageBox.Show("Something went wrong! No, you don't get to know what it is");
+                
             }
 
             return _Candlestick;

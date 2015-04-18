@@ -1,14 +1,3 @@
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\SystemSoftwareDevProject1.exe.config
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.exe
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.pdb
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\Resources\companylist.csv
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\Configuration\DefaultConfig.xml
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\SystemSoftwareDevProject1.exe
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\SystemSoftwareDevProject1.pdb
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.csprojResolveAssemblyReference.cache
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.Form1.resources
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.Properties.Resources.resources
-C:\Users\Blake Burton\Documents\GitHub\SystemSoftwareDevProject1\SystemSoftwareDevProject1\obj\Debug\SystemSoftwareDevProject1.csproj.GenerateResource.Cache
 F:\School\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\SystemSoftwareDevProject1.exe.config
 F:\School\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\Configuration\DefaultConfig.xml
 F:\School\SystemSoftwareDevProject1\SystemSoftwareDevProject1\bin\Debug\Resources\companylist.csv
