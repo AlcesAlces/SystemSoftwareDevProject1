@@ -28,6 +28,11 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
         public double Volume { get; private set; }
         public decimal adjClose { get; private set; }
 
+        /// <summary>
+        /// Constructor used to parse a csv style string.
+        /// </summary>
+        /// <param name="CSVInput"></param>
+        /// <param name="name"></param>
         public aCandleStick(string CSVInput, string name)
         {
             try
@@ -46,6 +51,17 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
             {
                 MessageBox.Show(ex.ToString());
             }
+        }
+
+        public aCandleStick(DateTime start, decimal open, decimal low, decimal high, decimal close, double volume, decimal adj)
+        {
+            StartingDate = start;
+            Open = open;
+            Close = close;
+            High = high;
+            Low = low;
+            adjClose = adj;
+            Volume = volume;
         }
 
     }

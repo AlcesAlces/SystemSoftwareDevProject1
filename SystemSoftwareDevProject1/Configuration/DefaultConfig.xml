@@ -22,7 +22,7 @@
   
   <!--Default range of dates for downloading-->
   <defaultrange>
-    <start>2000,1,1</start>
+    <start>1900,1,1</start>
     <end>TODAY</end>
   </defaultrange>
 
@@ -34,6 +34,8 @@
       <path>C:\DEV\STOCKDATA\Daily</path>
     </path>
 
+    <!--
+    
     <path>
       <resolution>w</resolution>
       <path>C:\DEV\STOCKDATA\Weekly</path>
@@ -43,7 +45,8 @@
       <resolution>m</resolution>
       <path>C:\DEV\STOCKDATA\Monthly</path>
     </path>
-
+    
+    -->
   </defaultfilepaths>
   
 </defaultconfiguration>

@@ -33,7 +33,10 @@ namespace SystemSoftwareDevProject1
             aStock stocks = _stocks;
 
             //Apply a date filter on the stocks
-            stocks.Candlestick = StockFilters.filterByTime(stocks.Candlestick, _stocks.StartingDate, _stocks.EndingDate);
+            if (stocks.aPeriodType == aStock.PeriodType.DAILY)
+            {
+                stocks.Candlestick = StockFilters.filterByTime(stocks.Candlestick, _stocks.StartingDate, _stocks.EndingDate);
+            }
 
             chart2.Series.Clear();
             //Create a new series on the chart

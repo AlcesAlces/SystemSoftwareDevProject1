@@ -113,6 +113,14 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             return true;
         }
 
+        /// <summary>
+        /// Asynchronous version of the file downloader
+        /// </summary>
+        /// <param name="listOfPaths"></param>
+        /// <param name="stocks"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
         public static async Task fileDownloader(List<string> listOfPaths, List<string> stocks, DateTime start, DateTime end)
         {
             foreach (string item in listOfPaths)
@@ -121,27 +129,25 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
                 {
                     string path = item + "\\" + subitem + ".csv";
 
-                    if (File.Exists(path))
-                    {
-                        //File exists, check to see if file is up to date.
-                        if (verifyFileUpToDate(subitem, getResolutionByPath(item)))
-                        {
-                            //File is up to date!
-                        }
-
-                        else
-                        {
-                            await downloadFile(urlBuilder(subitem, start, end, getResolutionByPath(item)), path);
-                        }
-                    }
-
-                    else
-                    {
-                        //File does not exist, we need to download it and put it in the directory.
-                        await downloadFile(urlBuilder(subitem, start, end, getResolutionByPath(item)), path);
-                    }
+                    await downloadFile(urlBuilder(subitem, start, end, getResolutionByPath(item)), path);
+                    
                 }
             }
+        }
+
+        /// <summary>
+        /// Synchronous version of the file downloader, only configured to download daily.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="name"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public static void fileDownloaderSync(string name)
+        {
+            string _path = getPathByResolution(aStock.PeriodType.DAILY) + "\\" + name + ".csv";
+            string url = urlBuilder(name,new DateTime(1900,1,1),DateTime.Now,aStock.PeriodType.DAILY);
+            WebClient client = new WebClient();
+            client.DownloadFile(url, _path);
         }
 
         /// <summary>
@@ -160,30 +166,75 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             }
         }
 
+        /// <summary>
+        /// Return stock data.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="resolution"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
         public static async Task<List<aCandleStick>> getStockData(string name, aStock.PeriodType resolution, DateTime start, DateTime end, RetrievalMode mode)
         {
 
             string path = getPathByResolution(resolution) + "\\" + name + ".csv";
 
-            List<aCandleStick> toReturn;
+            List<aCandleStick> toReturn = new List<aCandleStick>();
 
-            if (mode == RetrievalMode.File)
+            //If the res is daily, just get it from the file you should have.
+            if(resolution == aStock.PeriodType.DAILY)
             {
-
                 if (File.Exists(path))
                 {
                     toReturn = readStockDataFromFile(name, resolution, start, end);
                 }
 
+                //If the file is borked, get it.
                 else
                 {
-                    toReturn = await readStockDataFromURL(name, resolution, start, end);
+                    fileDownloaderSync(name);
                 }
             }
 
-            else
+            else if(resolution == aStock.PeriodType.MONTHLY)
             {
-                toReturn = await readStockDataFromURL(name, resolution, start, end);
+                string dailyPath = getPathByResolution(aStock.PeriodType.DAILY) + "\\" + name + ".csv";
+
+                if(!File.Exists(dailyPath))
+                {
+                    fileDownloaderSync(name);
+                }
+
+                List<aCandleStick> tempSticks = readStockDataFromFile(name, aStock.PeriodType.DAILY, new DateTime(1900, 1, 1), DateTime.Now);
+
+                var monthlyReconstruction = from b in tempSticks
+                                            where b.StartingDate >= start.Date && b.StartingDate <= end
+                                            group b by b.StartingDate.Year into yg
+                                            select new
+                                            {
+                                                yearGroup = 
+                                                from c in yg
+                                                group c by c.StartingDate.Month into mg
+                                                select new
+                                                {
+                                                    start = mg.First().StartingDate,
+                                                    open = mg.First().Open,
+                                                    close = mg.Last().Close,
+                                                    high = mg.Max(x => x.High),
+                                                    low = mg.Min(x => x.Low),
+                                                    adj = mg.Last().adjClose,
+                                                    vol = mg.Sum(x => x.Volume)
+                                                }
+                                            };
+
+                foreach(var item in monthlyReconstruction)
+                {
+                    foreach(var subitem in item.yearGroup)
+                    {
+                        toReturn.Add(new aCandleStick(subitem.start, subitem.open, subitem.low, subitem.high, subitem.close, subitem.vol, subitem.adj));
+                    }
+                }
             }
 
             return toReturn;
@@ -263,33 +314,33 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         /// <param name="name"></param>
         /// <param name="resolution"></param>
         /// <returns></returns>
-        private static bool verifyFileUpToDate(string name, aStock.PeriodType resolution)
-        {
+        //private static bool verifyFileUpToDate(string name, aStock.PeriodType resolution)
+        //{
 
-            string path = getPathByResolution(resolution) + "\\" + name + ".csv";
+        //    string path = getPathByResolution(resolution) + "\\" + name + ".csv";
 
-            var timeToTest = (DateTime.Now - File.GetLastWriteTime(path)).Days;
+        //    var timeToTest = (DateTime.Now - File.GetLastWriteTime(path)).Days;
 
-            if(timeToTest >= 1)
-            {
-                //Information is very old comparatively, update it.
-                return false;
-            }
+        //    if(timeToTest >= 1)
+        //    {
+        //        //Information is very old comparatively, update it.
+        //        return false;
+        //    }
 
-            else
-            {
-                //Information may be relatively old.
-                if (DateTime.Now.Hour >= 17)
-                {
-                    return false;
-                }
+        //    else
+        //    {
+        //        //Information may be relatively old.
+        //        if (DateTime.Now.Hour >= 17)
+        //        {
+        //            return false;
+        //        }
 
-                else
-                {
-                    return true;
-                }
-            }
-        }
+        //        else
+        //        {
+        //            return true;
+        //        }
+        //    }
+        //}
         /// <summary>
         /// checks to see if the end and start dates are in the file if not DL a new file with the data needed
         /// </summary>
