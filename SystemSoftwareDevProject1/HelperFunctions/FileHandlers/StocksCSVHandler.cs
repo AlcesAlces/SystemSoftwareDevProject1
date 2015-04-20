@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 using SystemSoftwareDevProject1.HelperClasses.Stocks;
 
@@ -24,7 +27,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         //Format
         //"http://ichart.yahoo.com/table.csv?s=MSFT&a=0&b=1&c=2000&d=11&e=24&f=2014&g=w&ignore=.csv";
 
-        public static string urlBuilder(string name, DateTime start, DateTime end, aStock.PeriodType resolution)
+        public static string urlBuilder(string name, DateTime start, DateTime end, aStock.aPeriodType resolution)
         {
             //Need to put in the company name
             string toReturn = "http://ichart.yahoo.com/table.csv?s=";
@@ -135,6 +138,8 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             }
         }
 
+
+        public static bool downloader = true;
         /// <summary>
         /// Synchronous version of the file downloader, only configured to download daily.
         /// </summary>
@@ -144,10 +149,16 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         /// <param name="end"></param>
         public static void fileDownloaderSync(string name)
         {
-            string _path = getPathByResolution(aStock.PeriodType.DAILY) + "\\" + name + ".csv";
-            string url = urlBuilder(name,new DateTime(1900,1,1),DateTime.Now,aStock.PeriodType.DAILY);
+            string _path = getPathByResolution(aStock.aPeriodType.DAILY) + "\\" + name + ".csv";
+            string url = urlBuilder(name,new DateTime(1900,1,1),DateTime.Now,aStock.aPeriodType.DAILY);
             WebClient client = new WebClient();
-            client.DownloadFile(url, _path);
+
+            client.DownloadFile((url), _path);
+
+            while (downloader)
+            {
+                downloader = client.IsBusy;
+            }
         }
 
         /// <summary>
@@ -167,87 +178,12 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         }
 
         /// <summary>
-        /// Return stock data.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="resolution"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <param name="mode"></param>
-        /// <returns></returns>
-        public static async Task<List<aCandleStick>> getStockData(string name, aStock.PeriodType resolution, DateTime start, DateTime end, RetrievalMode mode)
-        {
-
-            string path = getPathByResolution(resolution) + "\\" + name + ".csv";
-
-            List<aCandleStick> toReturn = new List<aCandleStick>();
-
-            //If the res is daily, just get it from the file you should have.
-            if(resolution == aStock.PeriodType.DAILY)
-            {
-                if (File.Exists(path))
-                {
-                    toReturn = readStockDataFromFile(name, resolution, start, end);
-                }
-
-                //If the file is borked, get it.
-                else
-                {
-                    fileDownloaderSync(name);
-                }
-            }
-
-            else if(resolution == aStock.PeriodType.MONTHLY)
-            {
-                string dailyPath = getPathByResolution(aStock.PeriodType.DAILY) + "\\" + name + ".csv";
-
-                if(!File.Exists(dailyPath))
-                {
-                    fileDownloaderSync(name);
-                }
-
-                List<aCandleStick> tempSticks = readStockDataFromFile(name, aStock.PeriodType.DAILY, new DateTime(1900, 1, 1), DateTime.Now);
-
-                var monthlyReconstruction = from b in tempSticks
-                                            where b.StartingDate >= start.Date && b.StartingDate <= end
-                                            group b by b.StartingDate.Year into yg
-                                            select new
-                                            {
-                                                yearGroup = 
-                                                from c in yg
-                                                group c by c.StartingDate.Month into mg
-                                                select new
-                                                {
-                                                    start = mg.First().StartingDate,
-                                                    open = mg.First().Open,
-                                                    close = mg.Last().Close,
-                                                    high = mg.Max(x => x.High),
-                                                    low = mg.Min(x => x.Low),
-                                                    adj = mg.Last().adjClose,
-                                                    vol = mg.Sum(x => x.Volume)
-                                                }
-                                            };
-
-                foreach(var item in monthlyReconstruction)
-                {
-                    foreach(var subitem in item.yearGroup)
-                    {
-                        toReturn.Add(new aCandleStick(subitem.start, subitem.open, subitem.low, subitem.high, subitem.close, subitem.vol, subitem.adj));
-                    }
-                }
-            }
-
-            return toReturn;
-
-        }
-
-        /// <summary>
         /// Use to find saved data about stocks.
         /// </summary>
         /// <param name="name"> The name of the stock eg: GOOG</param>
         /// <param name="resolution"> The resolution scope eg: m, w, d</param>
         /// <returns></returns>
-        private static List<aCandleStick> readStockDataFromFile(string name, aStock.PeriodType resolution, DateTime start, DateTime end)
+        public static List<aCandleStick> readStockDataFromFile(string name, aStock.aPeriodType resolution, DateTime start, DateTime end)
         {
             string path = getPathByResolution(resolution) + "\\" + name + ".csv";
 
@@ -269,7 +205,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             return StockFilters.filterByTime(toReturn,start, end);
         }
 
-        private static async Task<List<aCandleStick>> readStockDataFromURL(string name, aStock.PeriodType resolution, DateTime start, DateTime end)
+        private static async Task<List<aCandleStick>> readStockDataFromURL(string name, aStock.aPeriodType resolution, DateTime start, DateTime end)
         {
 
             string url = urlBuilder(name, start, end, resolution);
@@ -347,7 +283,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         /// <param name="name"> GOOL</param>
         /// <param name="resolution">w d m</param>
         /// <returns></returns>
-        public static async Task<bool> checkFileForDates(string name, aStock.PeriodType resolution, DateTime start, DateTime end)
+        public static async Task<bool> checkFileForDates(string name, aStock.aPeriodType resolution, DateTime start, DateTime end)
         {
             string path = getPathByResolution(resolution) + "\\" + name + ".csv";
             if (File.Exists(path))
@@ -363,7 +299,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
 
 
 
-                if (resolution == aStock.PeriodType.DAILY)
+                if (resolution == aStock.aPeriodType.DAILY)
                 {
                     startReturn = (from b in stockList
                                    where b.StartingDate.Equals(start)
@@ -373,7 +309,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
                                  where b.StartingDate.Equals(end)
                                  select b).ToList();
                 }
-                else if (resolution.Equals(aStock.PeriodType.WEEKLY))
+                else if (resolution.Equals(aStock.aPeriodType.WEEKLY))
                 {
                     //qurey for weekly
                     DateTime thing = start.AddDays(-7);
@@ -434,7 +370,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         /// </summary>
         /// <param name="resolution">Passed in as d, w, or m</param>
         /// <returns name="toReturn">returns the path associated with the resolution. Returns empty if not found.</returns>
-        public static string getPathByResolution(aStock.PeriodType resolution)
+        public static string getPathByResolution(aStock.aPeriodType resolution)
         {
             XmlDocument doc = new XmlDocument();
             doc.Load(@"Configuration\DefaultConfig.xml");
@@ -462,7 +398,7 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         /// </summary>
         /// <param name="path">Argumetn passed in as a file path.</param>
         /// <returns name = "toReturn">Return based on the match. Returns empty if not found.</returns>
-        public static aStock.PeriodType getResolutionByPath(string path)
+        public static aStock.aPeriodType getResolutionByPath(string path)
         {
             XmlDocument doc = new XmlDocument();
             doc.Load(@"Configuration\DefaultConfig.xml");
@@ -485,13 +421,13 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
             switch(toReturn)
             {
                 case "m":
-                    return aStock.PeriodType.MONTHLY;
+                    return aStock.aPeriodType.MONTHLY;
                 case "w":
-                    return aStock.PeriodType.WEEKLY;
+                    return aStock.aPeriodType.WEEKLY;
                 case "d":
-                    return aStock.PeriodType.DAILY;
+                    return aStock.aPeriodType.DAILY;
                 default:
-                    return aStock.PeriodType.DAILY;
+                    return aStock.aPeriodType.DAILY;
             }
         }
 

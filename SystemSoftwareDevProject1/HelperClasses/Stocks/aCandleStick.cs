@@ -12,6 +12,7 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
     //Date,Open,High,Low,Close,Volume,Adj Close
     //2014-12-22,47.78,48.80,47.71,48.14,20550600,47.80
 
+
     /// <summary>
     /// A single "Stock" entry.
     /// </summary>

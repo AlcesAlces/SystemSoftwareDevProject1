@@ -72,22 +72,22 @@ namespace SystemSoftwareDevProject1
         private async void btnGo_Click(object sender, EventArgs e)
         {
 
-            aStock.PeriodType resolution = aStock.PeriodType.DAILY;
+            aStock.aPeriodType resolution = aStock.aPeriodType.DAILY;
             string stock = cbStocks.Text;
 
             if (rbDay.Checked)
             {
-                resolution = aStock.PeriodType.DAILY;
+                resolution = aStock.aPeriodType.DAILY;
             }
 
             else if(rbMonth.Checked)
             {
-                resolution = aStock.PeriodType.MONTHLY;
+                resolution = aStock.aPeriodType.MONTHLY;
             }
 
             else
             {
-                resolution = aStock.PeriodType.WEEKLY;
+                resolution = aStock.aPeriodType.WEEKLY;
             }
 
             DateTime start = dpFromDate.Value;
@@ -101,12 +101,9 @@ namespace SystemSoftwareDevProject1
                 {
                     tsslMain.Text = "Downloading new stock data...";
                     this.Enabled = false;
-                    Tuple<aStock, bool> returnVerification = new Tuple<aStock,bool>(null, false);
-                    returnVerification = await aStock.aStockAsync(stock, start, end,resolution, StocksCSVHandler.RetrievalMode.File);
-                    //Spin to win
-                    while (!returnVerification.Item2) ;
-
-                    toSend = returnVerification.Item1;
+                    
+                    //Call the magical createStock function.
+                    toSend = aStock.createaStock(stock, start, end,resolution);
                 }
 
                 catch (WebException ex)

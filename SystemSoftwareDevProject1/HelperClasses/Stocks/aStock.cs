@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,10 +15,10 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
     /// </summary>
     public class aStock
     {
-        public enum PeriodType { DAILY = 'd', MONTHLY='m', WEEKLY='w'}
+        public enum aPeriodType { DAILY = 'd', MONTHLY='m', WEEKLY='w'}
         
         public List<aCandleStick> Candlestick = new List<aCandleStick>();
-        public PeriodType aPeriodType;
+        public aPeriodType PeriodType;
         public DateTime StartingDate;
         public DateTime EndingDate;
         public string companyName { get; set; }
@@ -29,76 +31,143 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="res"></param>
-        public aStock(List<aCandleStick> candleSticks, string name, DateTime start, DateTime end, PeriodType res)
+        public aStock(List<aCandleStick> candleSticks, string name, DateTime start, DateTime end, aPeriodType res)
         {
-            aPeriodType = res;
+            PeriodType = res;
             Candlestick = candleSticks;
             companyName = name;
             StartingDate = start;
             EndingDate = end;
         }
 
-        /// <summary>
-        /// Constructor to be used to create an aStock object.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <param name="res"></param>
-        /// <param name="mode"></param>
-        public static async Task<Tuple<aStock,bool>> aStockAsync(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
+        public aStock()
         {
-            List<aCandleStick> _candlestick = new List<aCandleStick>();
 
-            if(mode == StocksCSVHandler.RetrievalMode.File)
+        }
+
+        /// <summary>
+        /// Function to return a stock object/
+        /// </summary>
+        /// <param name="name">Name of the company</param>
+        /// <param name="start">Starting period</param>
+        /// <param name="end">Ending period</param>
+        /// <param name="res">Resolution (aPeriodType from aSTock class)</param>
+        /// <returns></returns>
+        public static aStock createaStock(string name, DateTime start, DateTime end, aPeriodType res)
+        {
+            aStock toReturn = new aStock()
             {
-                _candlestick = await ReadFromFile(name,start,end,res,mode);
+                PeriodType = res,
+                Candlestick = null,
+                companyName = name,
+                StartingDate = start,
+                EndingDate = end
+            };
+
+            //Daily resolution
+            if(res == aPeriodType.DAILY)
+            {
+                toReturn = toReturn.generateDailyPeriod(toReturn.PeriodType);
+            }
+
+            //Monthly, or weekly.
+            else
+            {
+                toReturn = toReturn.generateOtherPeriod(toReturn.PeriodType);
+            }
+
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Get the daily stock data. If it isn't downloaded, download it.
+        /// </summary>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        public aStock generateDailyPeriod(aPeriodType period)
+        {
+            string path = StocksCSVHandler.getPathByResolution(PeriodType) + "\\" + companyName + ".csv";
+
+            List<aCandleStick> toReturn = new List<aCandleStick>();
+
+            if (!File.Exists(path))
+            {
+                StocksCSVHandler.fileDownloaderSync(companyName);
+            }
+
+            toReturn = StocksCSVHandler.readStockDataFromFile(companyName, PeriodType, StartingDate, EndingDate);
+            Candlestick = toReturn;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Get he various other kinds of stock data (Monthly, Weekly) based on daily data.
+        /// If daily data does not exist, download daily data.
+        /// </summary>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        public aStock generateOtherPeriod(aPeriodType period)
+        {
+            string dailyPath = StocksCSVHandler.getPathByResolution(aStock.aPeriodType.DAILY) + "\\" + companyName + ".csv";
+            if (!File.Exists(dailyPath))
+            {
+                StocksCSVHandler.fileDownloaderSync(companyName);
+            }
+
+            List<aCandleStick> toReturn = new List<aCandleStick>();
+            List<aCandleStick> tempSticks = StocksCSVHandler.readStockDataFromFile(companyName, aStock.aPeriodType.DAILY, new DateTime(1900, 1, 1), DateTime.Now);
+
+            if(period == aStock.aPeriodType.MONTHLY)
+            {
+                //Linq statement to get all of the month data
+                (from b in tempSticks
+                where b.StartingDate >= StartingDate.Date && b.StartingDate <= EndingDate
+                //Group everything by a starting year, creating our first container.
+                group b by b.StartingDate.Year into yg
+                select new
+                {
+                    yearGroup =
+                    from c in yg
+                    //Group everything in each year into a month container.
+                    group c by c.StartingDate.Month into mg
+                    //Select statement using the candlestick constructor, and lambda aggrigation.
+                    select new aCandleStick(mg.First().StartingDate, mg.First().Open, mg.Min(x => x.Low),
+                                            mg.Max(x => x.High), mg.Last().Close, mg.Sum(x => x.Volume), mg.Last().adjClose)
+                   //Use the built in foreach loops to avoid creating more code than needed.
+                }).ToList().ForEach(x => x.yearGroup.ToList().ForEach(y => toReturn.Add(y)));
             }
 
             else
             {
-                _candlestick = await ReadFromURL(name, start, end, res, mode);
+                (from b in tempSticks
+                where b.StartingDate >= StartingDate.Date && b.StartingDate <= EndingDate
+                //Group everything by year first/
+                group b by b.StartingDate.Year into yg
+                select new
+                {
+                    yearGroup =
+                    from c in yg
+                    //Group each year group by month.
+                    group c by c.StartingDate.Month into mg
+                    select new
+                    {
+                        monthGroup =
+                        from d in mg
+                        //Use the calendar class to group every month group by week of the year.
+                        group d by CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d.StartingDate,CalendarWeekRule.FirstFourDayWeek,DayOfWeek.Monday) into wg
+                        //Use our constructor and some lambdas to get the information we need.
+                        select new aCandleStick(wg.First().StartingDate,wg.First().Open,wg.Min(x => x.Low),
+                                            wg.Max(x => x.High),wg.Last().Close,wg.Sum(x => x.Volume),wg.Last().adjClose)
+                    }
+                    //Use the built in for-loop and some more lambdas to get our information.
+                }).ToList().ForEach(x=> x.yearGroup.ToList().ForEach(y=>y.monthGroup.ToList().ForEach(z=>toReturn.Add(z))));
+                
             }
 
-            return new Tuple<aStock,bool>(new aStock(_candlestick, name, start, end, res), true);
-        }
+            Candlestick = toReturn;
 
-        /// <summary>
-        /// Create your stock data from file.
-        /// </summary>
-        /// <param name="mode"></param>
-        public static async Task<List<aCandleStick>> ReadFromFile(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
-        {
-            List<aCandleStick> _Candlestick = null;
-            try
-            {
-                _Candlestick = await StocksCSVHandler.getStockData(name, res, start, end, mode);
-            }
-            catch
-            {
-                MessageBox.Show("Something went wrong! No, you don't get to know what it is");
-            }
-
-            return _Candlestick;
-        }
-
-        /// <summary>
-        /// Create your stock data from URL.
-        /// </summary>
-        /// <param name="mode"></param>
-        public static async Task<List<aCandleStick>> ReadFromURL(string name, DateTime start, DateTime end, PeriodType res, StocksCSVHandler.RetrievalMode mode)
-        {
-            List<aCandleStick> _Candlestick = null;
-            try
-            {
-                _Candlestick = await StocksCSVHandler.getStockData(name, res, start, end, mode);
-            }
-            catch
-            {
-                MessageBox.Show("Something went wrong! No, you don't get to know what it is");
-            }
-
-            return _Candlestick;
+            return this;
         }
 
         public string getDateRange()
