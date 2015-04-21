@@ -132,8 +132,8 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
                     //Group everything in each year into a month container.
                     group c by c.StartingDate.Month into mg
                     //Select statement using the candlestick constructor, and lambda aggrigation.
-                    select new aCandleStick(mg.First().StartingDate, mg.First().Open, mg.Min(x => x.Low),
-                                            mg.Max(x => x.High), mg.Last().Close, mg.Sum(x => x.Volume), mg.Last().adjClose)
+                    select new aCandleStick(mg.First().StartingDate, mg.Last().Open, mg.Min(x => x.Low),
+                                            mg.Max(x => x.High), mg.First().Close, mg.Sum(x => x.Volume), mg.Last().adjClose)
                    //Use the built in foreach loops to avoid creating more code than needed.
                 }).ToList().ForEach(x => x.yearGroup.ToList().ForEach(y => toReturn.Add(y)));
             }
@@ -156,9 +156,9 @@ namespace SystemSoftwareDevProject1.HelperClasses.Stocks
                         from d in mg
                         //Use the calendar class to group every month group by week of the year.
                         group d by CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d.StartingDate,CalendarWeekRule.FirstFourDayWeek,DayOfWeek.Monday) into wg
-                        //Use our constructor and some lambdas to get the information we need.
-                        select new aCandleStick(wg.First().StartingDate,wg.First().Open,wg.Min(x => x.Low),
-                                            wg.Max(x => x.High),wg.Last().Close,wg.Sum(x => x.Volume),wg.Last().adjClose)
+                            //Use our constructor and some lambdas to get the information we need.
+                            select new aCandleStick(wg.First().StartingDate,wg.Last().Open,wg.Min(x => x.Low),
+                                                wg.Max(x => x.High),wg.First().Close,wg.Sum(x => x.Volume),wg.Last().adjClose)
                     }
                     //Use the built in for-loop and some more lambdas to get our information.
                 }).ToList().ForEach(x=> x.yearGroup.ToList().ForEach(y=>y.monthGroup.ToList().ForEach(z=>toReturn.Add(z))));
