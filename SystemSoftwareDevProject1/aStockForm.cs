@@ -73,8 +73,6 @@ namespace SystemSoftwareDevProject1
         {
             //Display
             chart1.Series.Clear();
-            if (await StocksCSVHandler.checkFileForDates(_stocks.companyName, _stocks.PeriodType, _stocks.StartingDate, _stocks.EndingDate))
-            {
                 try
                 {
                     populateChartContent(_stocks.PeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.File);
@@ -85,18 +83,6 @@ namespace SystemSoftwareDevProject1
                     MessageBox.Show(ex.Message);
                 }
             }
-
-            else
-            {
-                try
-                {
-                    populateChartContent(_stocks.PeriodType, _stocks.companyName, StocksCSVHandler.RetrievalMode.URL);
-                }
-                catch(Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
         }
-    }
+    
 }

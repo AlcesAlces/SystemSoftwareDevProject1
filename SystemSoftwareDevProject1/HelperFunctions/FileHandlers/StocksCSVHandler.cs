@@ -277,89 +277,89 @@ namespace SystemSoftwareDevProject1.HelperFunctions.FileHandlers
         //        }
         //    }
         //}
-        /// <summary>
-        /// checks to see if the end and start dates are in the file if not DL a new file with the data needed
-        /// </summary>
-        /// <param name="name"> GOOL</param>
-        /// <param name="resolution">w d m</param>
-        /// <returns></returns>
-        public static async Task<bool> checkFileForDates(string name, aStock.aPeriodType resolution, DateTime start, DateTime end)
-        {
-            string path = getPathByResolution(resolution) + "\\" + name + ".csv";
-            if (File.Exists(path))
-            {
-                List<aCandleStick> stockList = new List<aCandleStick>();
+        ///// <summary>
+        ///// checks to see if the end and start dates are in the file if not DL a new file with the data needed
+        ///// </summary>
+        ///// <param name="name"> GOOL</param>
+        ///// <param name="resolution">w d m</param>
+        ///// <returns></returns>
+        //public static async Task<bool> checkFileForDates(string name, aStock.aPeriodType resolution, DateTime start, DateTime end)
+        //{
+        //    string path = getPathByResolution(resolution) + "\\" + name + ".csv";
+        //    if (File.Exists(path))
+        //    {
+        //        List<aCandleStick> stockList = new List<aCandleStick>();
 
-                byte[] data = File.ReadAllBytes(path);
-                string str = System.Text.Encoding.Default.GetString(data);
-                stockList = fileCsvToStockList(str, name);
+        //        byte[] data = File.ReadAllBytes(path);
+        //        string str = System.Text.Encoding.Default.GetString(data);
+        //        stockList = fileCsvToStockList(str, name);
 
-                List<aCandleStick> startReturn = new List<aCandleStick>();
-                List<aCandleStick> endReturn = new List<aCandleStick>();
+        //        List<aCandleStick> startReturn = new List<aCandleStick>();
+        //        List<aCandleStick> endReturn = new List<aCandleStick>();
 
 
 
-                if (resolution == aStock.aPeriodType.DAILY)
-                {
-                    startReturn = (from b in stockList
-                                   where b.StartingDate.Equals(start)
-                                   select b).ToList();
+        //        if (resolution == aStock.aPeriodType.DAILY)
+        //        {
+        //            startReturn = (from b in stockList
+        //                           where b.StartingDate.Equals(start)
+        //                           select b).ToList();
 
-                    endReturn = (from b in stockList
-                                 where b.StartingDate.Equals(end)
-                                 select b).ToList();
-                }
-                else if (resolution.Equals(aStock.aPeriodType.WEEKLY))
-                {
-                    //qurey for weekly
-                    DateTime thing = start.AddDays(-7);
+        //            endReturn = (from b in stockList
+        //                         where b.StartingDate.Equals(end)
+        //                         select b).ToList();
+        //        }
+        //        else if (resolution.Equals(aStock.aPeriodType.WEEKLY))
+        //        {
+        //            //qurey for weekly
+        //            DateTime thing = start.AddDays(-7);
 
-                    startReturn = (from b in stockList
-                                   where b.StartingDate.CompareTo((start.AddDays(7))) <= 0
-                                   select b).ToList();
+        //            startReturn = (from b in stockList
+        //                           where b.StartingDate.CompareTo((start.AddDays(7))) <= 0
+        //                           select b).ToList();
 
-                    endReturn = (from b in stockList
-                                 where b.StartingDate.CompareTo(end.AddDays(-7)) >= 0
-                                 select b).ToList();
-                }
-                else
-                {
-                    //must me monthly
-                    //need to check if the date selected it +- a month away
-                    startReturn = (from b in stockList
-                                   where b.StartingDate.CompareTo(start.AddMonths(1)) <= 0
-                                   select b).ToList();
+        //            endReturn = (from b in stockList
+        //                         where b.StartingDate.CompareTo(end.AddDays(-7)) >= 0
+        //                         select b).ToList();
+        //        }
+        //        else
+        //        {
+        //            //must me monthly
+        //            //need to check if the date selected it +- a month away
+        //            startReturn = (from b in stockList
+        //                           where b.StartingDate.CompareTo(start.AddMonths(1)) <= 0
+        //                           select b).ToList();
 
-                    endReturn = (from b in stockList
-                                 where b.StartingDate.CompareTo(end.AddMonths(-1)) >= 0
-                                 select b).ToList();
-                }
+        //            endReturn = (from b in stockList
+        //                         where b.StartingDate.CompareTo(end.AddMonths(-1)) >= 0
+        //                         select b).ToList();
+        //        }
 
-                if (startReturn.Count == 0 || endReturn.Count == 0)
-                {
-                    //the file dosent contain the dates needed 
-                    //need to DL new one
-                    List<string> Stocks = new List<string>();
-                    List<string> Paths = new List<string>();
+        //        if (startReturn.Count == 0 || endReturn.Count == 0)
+        //        {
+        //            //the file dosent contain the dates needed 
+        //            //need to DL new one
+        //            List<string> Stocks = new List<string>();
+        //            List<string> Paths = new List<string>();
 
-                    Stocks.Add(name);
-                    Paths.Add(StocksCSVHandler.getPathByResolution(resolution));
+        //            Stocks.Add(name);
+        //            Paths.Add(StocksCSVHandler.getPathByResolution(resolution));
 
-                    await downloadFile(urlBuilder(name, start, end, resolution), path);
-                    return false;
-                }
-                else
-                {
-                    //nothing needs to be done use it
-                    return true;
-                }
-            }
-            else
-            {//File does not exist, we need to download it and put it in the directory.
-                await downloadFile(urlBuilder(name, start, end, resolution), path);
-                return false;
-            }
-        }
+        //            await downloadFile(urlBuilder(name, start, end, resolution), path);
+        //            return false;
+        //        }
+        //        else
+        //        {
+        //            //nothing needs to be done use it
+        //            return true;
+        //        }
+        //    }
+        //    else
+        //    {//File does not exist, we need to download it and put it in the directory.
+        //        await downloadFile(urlBuilder(name, start, end, resolution), path);
+        //        return false;
+        //    }
+        //}
 
         #endregion
 
