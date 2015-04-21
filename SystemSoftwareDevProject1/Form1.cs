@@ -126,26 +126,35 @@ namespace SystemSoftwareDevProject1
 
             if(rbDownload.Checked)
             {
-                //Download
-                List<string> Stocks = new List<string>();
-                List<string> Paths = new List<string>();
 
-
-                string path = StocksCSVHandler.getPathByResolution(resolution);
-
-                Stocks.Add(stock);
-                Paths.Add(path);
-
-                try
+                if (resolution == aStock.aPeriodType.MONTHLY || resolution == aStock.aPeriodType.WEEKLY)
                 {
-
-                    await StocksCSVHandler.fileDownloader(Paths, Stocks, start, end);
-
+                    MessageBox.Show("You're not allowed to download Monthly or Weekly in project 3");
                 }
 
-                catch
+                else
                 {
-                    MessageBox.Show("The selected stock/date-time span could not be found at yahoo!");
+                    //Download
+                    List<string> Stocks = new List<string>();
+                    List<string> Paths = new List<string>();
+
+
+                    string path = StocksCSVHandler.getPathByResolution(resolution);
+
+                    Stocks.Add(stock);
+                    Paths.Add(path);
+
+                    try
+                    {
+
+                        await StocksCSVHandler.fileDownloader(Paths, Stocks, start, end);
+
+                    }
+
+                    catch
+                    {
+                        MessageBox.Show("The selected stock/date-time span could not be found at yahoo!");
+                    }
                 }
             }
 
